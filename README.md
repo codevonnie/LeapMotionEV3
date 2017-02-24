@@ -5,6 +5,6 @@ This project is for a Gesture Based UI Development module for 4th year Software 
 
 * Leap Motion Controller is a gesture capture device that uses three infrared LEDs that generates pattern-less IR light and two monochromatic IR cameras that generate almost 200 frames per second of reflected data.  There are a number of official SDKs for different programming languages for the Leap motion.  The C# SDK is utilised for this project.
 
-* Lego Mindstorms EV3 is a Lego robotic kit which can be used to build many types of robots which Lego blocks, motors, sensors and a programmable control brick.  The official way of programming the Mindstorms EV3 is using a GUI software using drag and drop blocks.  For this project I programming the brick in C# using an unofficial API which is available [here](https://github.com/BrianPeek/legoev3).
+* Lego Mindstorms EV3 is a Lego robotic kit which can be used to build many types of robots which Lego blocks, motors, sensors and a programmable control brick.  The official way of programming the Mindstorms EV3 is using a GUI software using drag and drop blocks.  For this project I programmed the brick in C# using an unofficial API which is available [here](https://github.com/BrianPeek/legoev3).
 
 
