@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LeapEV3"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen" SizeToContent="Height">
+        Title="MainWindow" Height="350" Width="525" WindowStartupLocation="CenterScreen" SizeToContent="Height">
     <StackPanel>
         <StackPanel Orientation="Horizontal">
             <ComboBox x:Name="Ports"/>
@@ -13,6 +13,7 @@
             <Button x:Name="Disconnect" Click="Disconnect_Click">Disconnect</Button>
         </StackPanel>
         <TextBox x:Name="Output"/>
+        <TextBox x:Name="MotorOutput" Height="29"/>
     </StackPanel>
 
 </Window>

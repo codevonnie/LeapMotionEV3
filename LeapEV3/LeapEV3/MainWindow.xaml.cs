@@ -23,26 +23,20 @@ namespace LeapEV3
             InitializeComponent();
         }
 
-        // when the MainWindow loads, get the list of EV3 ports and set as a selection dropdown
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            Ports.ItemsSource = SerialPort.GetPortNames();
-            Ports.SelectedIndex = (Ports.ItemsSource as string[]).Length - 1;
-        }
-
         // when Connect button is clicked
         private async void Connect_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                _brick = new Brick(new BluetoothCommunication((string)Ports.SelectedItem)); //connect to brick using bluetooth at the selected port
+                _brick = new Brick(new BluetoothCommunication("com6")); //connect to brick using bluetooth at the selected port
                 //_brick = new Brick(new UsbCommunication());
                 //_brick = new Brick(new NetworkCommunication("192.168.2.237"));
                 //_brick.BrickChanged += brick_BrickChanged;
                 await _brick.ConnectAsync(); //make connection to brick
-                Output.Text = "Connected"; //output text to screen that connection has taken place
+                Output.Text = "Brick Connected"; //output text to screen that connection has taken place
                 controller.EventContext = SynchronizationContext.Current; // used for dispatching events
                 controller.FrameReady += newFrameHandler; //when a tracking frame is ready
+                Output.Text += "        Leap Connected";
 
             }
             catch (Exception ex)
@@ -84,87 +78,148 @@ namespace LeapEV3
                 }
 
                 float strength = rightHand.GrabStrength; //get value of grab hand gesture for right hand
-                float roll = leftHand.PalmNormal.Roll; //get roll value of the left hand
+                float roll = rightHand.PalmNormal.Roll; //get roll value of the right hand
                 float leftStrength = leftHand.GrabStrength; //get the value of grab hand gesture of left hand
                 float pinch = rightHand.PinchStrength; //get value of pinch gesture of right hand
-                Leap.Vector filteredHandPosition = leftHand.StabilizedPalmPosition;
-                Output.Text = filteredHandPosition.ToString();
+                List<Finger> fingerList = rightHand.Fingers;
+                float fingers = fingerList.Count;
+                float pitch = rightHand.Direction.Pitch;
+                Output.Text = ("Strength: " + strength.ToString() + " Right Roll: " + roll.ToString() + "Finger count: " + fingers + "Right Pitch: " + pitch);
 
                 //if right hand is a fist
                 if (strength == 1)
                 {
-                    await powerWheel(); //send power to motor
-                }
-                else if (pinch == 1) //if right hand is pinching
-                {
-                    await powerWheelReverse(); //send power in reverse to motor
-                }
-                else
-                {
-                    await StopMotorAC(); //if no gesture detected, stop power to motor
-                }
+                    if (roll > 0)
+                    {
+                        await powerLeftWheel(); //send power to left motor
+                    }
+                    else if (roll <= -2)
+                    {
+                        await powerRightWheel(); //send power to right motor
+                    }
 
-                //if left hand roll is less than 0 and not in a fist gesture
-                if ((roll < 0) && (leftStrength != 1))
+                    else if (roll < 0 && roll > -1.9) //send power to both motors
+                    {
+                        await powerWheels();
+                    }
+                    else if (pitch > 0.5)
+                    {
+                        await StopMotorBC();
+                    }
+
+                }
+                else if (strength != 1)
                 {
-                    await powerSteering(); //send power to motor
+                    if (roll > 0)
+                    {
+                        await powerLeftWheelReverse(); //send power to left motor
+                    }
+                    else if (roll <= -2)
+                    {
+                        await powerRightWheelReverse(); //send power to right motor
+                    }
+
+                    else if (roll < 0 && roll > -1.9) //send power to both motors
+                    {
+                        await powerWheelsReverse();
+                    }
+
+                    else if(pitch > 0.5)
+                    {
+                        await StopMotorBC();
+                    }
+                }
+                
+                //if left hand roll is less than 0 and not in a fist gesture
+                if (leftStrength == 1)
+                {
+                    await grasp(); //send power to grabber motor
                 }
                 //if left hand roll is greater than 0 and not in a fist gesture
-                else if ((roll > 0) && (leftStrength != 1))
+                else if (leftStrength != 1)
                 {
-                    await powerSteeringReverse(); //send power in reverse to motor
-                }
-                else
-                {
-                    await StopMotorB(); //if no gesture detected, stop power to motor
+                    await unGrasp(); //send power in reverse to grabber motor
                 }
             }
 
         }//newFrameHandler
 
+        private async Task powerLeftWheel()
+        {
+            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, 80, 1000, false);
+            //await _brick.BatchCommand.SendCommandAsync();
+            MotorOutput.Text = "powerLeftWheel";
+        }
+
+
+        private async Task powerRightWheel()
+        {
+            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
+            //await _brick.BatchCommand.SendCommandAsync();
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, 80, 1000, false);
+            MotorOutput.Text = "powerRightWheel";
+        }
+
         //power to port A and C
-        private async Task powerWheel()
+        private async Task powerWheels()
         {
-            _brick.BatchCommand.TurnMotorAtSpeedForTime(OutputPort.A, -100, 1000, false);
-            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, -100, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
+            await _brick.BatchCommand.SendCommandAsync();
+            MotorOutput.Text = "powerBothWheel";
+        }
+
+        private async Task powerLeftWheelReverse()
+        {
+            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, -50, 1000, false);
+            //await _brick.BatchCommand.SendCommandAsync();
+        }
+
+
+        private async Task powerRightWheelReverse()
+        {
+            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
+            //await _brick.BatchCommand.SendCommandAsync();
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, -50, 1000, false);
+        }
+
+        //power to port A and C
+        private async Task powerWheelsReverse()
+        {
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, -50, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, -50, 1000, false);
             await _brick.BatchCommand.SendCommandAsync();
         }
 
-        //reverse power to port A and C
-        private async Task powerWheelReverse()
+        
+        //close grabber
+        private async Task grasp()
         {
-            _brick.BatchCommand.TurnMotorAtSpeedForTime(OutputPort.A, 100, 1000, false);
-            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 100, 1000, false);
-            await _brick.BatchCommand.SendCommandAsync();
+            await _brick.DirectCommand.TurnMotorAtPowerAsync(OutputPort.A, 100);
         }
 
-        //power to Port B and D
-        private async Task powerSteering()
+        //open grabber
+        private async Task unGrasp()
         {
-            _brick.BatchCommand.TurnMotorAtSpeedForTime(OutputPort.B, 80, 1000, false);
-            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.D, 80, 1000, false);
-            await _brick.BatchCommand.SendCommandAsync();
+            await _brick.DirectCommand.TurnMotorAtPowerAsync(OutputPort.A, -100);
         }
-        //reverse power to ports B and D
-        private async Task powerSteeringReverse()
-        {
-            _brick.BatchCommand.TurnMotorAtSpeedForTime(OutputPort.B, -80, 1000, false);
-            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.D, -80, 1000, false);
-            await _brick.BatchCommand.SendCommandAsync();
-        }
-
+        
         //stop power to ports B and D
-        private async Task StopMotorB()
+        //private async Task StopMotorB()
+        //{
+        //    await _brick.DirectCommand.StopMotorAsync(OutputPort.A, false);
+        //    //await _brick.DirectCommand.StopMotorAsync(OutputPort.D, false);
+        //    MotorOutput.Text = "Stop A";
+        //}
+
+        //stop power to ports B and C
+        private async Task StopMotorBC()
         {
             await _brick.DirectCommand.StopMotorAsync(OutputPort.B, false);
-            await _brick.DirectCommand.StopMotorAsync(OutputPort.D, false);
-        }
-
-        //stop power to ports A and C
-        private async Task StopMotorAC()
-        {
-            await _brick.DirectCommand.StopMotorAsync(OutputPort.A, false);
             await _brick.DirectCommand.StopMotorAsync(OutputPort.C, false);
+            MotorOutput.Text = "Stop B and C";
         }
         
         //stop all motors
