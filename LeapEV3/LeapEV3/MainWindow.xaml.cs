@@ -45,6 +45,7 @@ namespace LeapEV3
             }
         }//Connect_Click
 
+        // ********************CHANGE BACK TO async void************************************
         async void newFrameHandler(object sender, FrameEventArgs eventArgs)
         {
             Leap.Frame frame = eventArgs.frame;//returns the most recent frame of tracking data
@@ -80,141 +81,135 @@ namespace LeapEV3
                 float strength = rightHand.GrabStrength; //get value of grab hand gesture for right hand
                 float roll = rightHand.PalmNormal.Roll; //get roll value of the right hand
                 float leftStrength = leftHand.GrabStrength; //get the value of grab hand gesture of left hand
-                float pinch = rightHand.PinchStrength; //get value of pinch gesture of right hand
-                List<Finger> fingerList = rightHand.Fingers;
-                float fingers = fingerList.Count;
-                float pitch = rightHand.Direction.Pitch;
-                Output.Text = ("Strength: " + strength.ToString() + " Right Roll: " + roll.ToString() + "Finger count: " + fingers + "Right Pitch: " + pitch);
+                //float pinch = rightHand.PinchStrength; //get value of pinch gesture of right hand
+                //List<Finger> fingerList = rightHand.Fingers;
+                //float fingers = fingerList.Count;
+                float pitch = rightHand.Direction.Pitch; //pitch is the bend in the elbow
+                Output.Text = ("Strength: " + strength.ToString() + " Right Roll: " + roll.ToString() + " Right Pitch: " + pitch);
 
                 //if right hand is a fist
-                if (strength == 1)
-                {
-                    if (roll > 0)
+                    if (strength == 1)
                     {
-                        await powerLeftWheel(); //send power to left motor
-                    }
-                    else if (roll <= -2)
-                    {
-                        await powerRightWheel(); //send power to right motor
-                    }
+                        if (pitch >= 0.8) // elbow is almost completely bent with hand up in the air
+                        {
+                            await StopMotorBC(); //stop motors
+                        }
+                        else if (roll >= 0.3) // if wrist is rolled to the right
+                        {
+                            await powerLeftWheel(); //send power to left motor
+                        }
+                        else if (roll <= -0.3) //if wrist is rolled to the left
+                        {
+                            await powerRightWheel(); //send power to right motor
+                        }
 
-                    else if (roll < 0 && roll > -1.9) //send power to both motors
-                    {
-                        await powerWheels();
-                    }
-                    else if (pitch > 0.5)
-                    {
-                        await StopMotorBC();
-                    }
+                        else if (roll < 0.3 && roll > -0.3) //wrist is not rolled but centred
+                        {
+                            await powerWheels();
+                        }
 
-                }
-                else if (strength != 1)
-                {
-                    if (roll > 0)
+                }//if
+                    //right hand is not a fist i.e. flat palm
+                    else if (strength != 1)
                     {
-                        await powerLeftWheelReverse(); //send power to left motor
-                    }
-                    else if (roll <= -2)
-                    {
-                        await powerRightWheelReverse(); //send power to right motor
-                    }
+                        if(pitch >= 0.8) // elbow is almost completely bent with hand up in the air
+                        {
+                            await StopMotorBC(); //stop motors
+                        }
 
-                    else if (roll < 0 && roll > -1.9) //send power to both motors
-                    {
-                        await powerWheelsReverse();
-                    }
+                        else if (roll >= 0.3) // if wrist is rolled to the right
+                        {
+                            await powerLeftWheelReverse(); //send power to left motor
+                        }
+                        else if (roll <= -0.3) //if wrist is rolled to the left
+                        {
+                            await powerRightWheelReverse(); //send power to right motor
+                        }
 
-                    else if(pitch > 0.5)
-                    {
-                        await StopMotorBC();
-                    }
-                }
-                
-                //if left hand roll is less than 0 and not in a fist gesture
+                        else if (roll < 0.3 && roll > -0.3) //wrist is not rolled but centred
+                        {
+                            await powerWheelsReverse(); //send power to both motors
+                        }
+
+                }//else if
+
+                //if left hand is in a fist gesture
                 if (leftStrength == 1)
                 {
-                    await grasp(); //send power to grabber motor
+                    await grasp(); //send power to grabber motor - i.e. close grabber
                 }
-                //if left hand roll is greater than 0 and not in a fist gesture
+                //if left hand roll is not in a fist gesture i.e. flat palm
                 else if (leftStrength != 1)
                 {
-                    await unGrasp(); //send power in reverse to grabber motor
+                    await unGrasp(); //send power in reverse to grabber motor - i.e. open grabber
                 }
             }
 
         }//newFrameHandler
 
+
         private async Task powerLeftWheel()
         {
-            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
+            //send direct command to motor C on robot to turn forward at power 80 for 1 second - turns robot right
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, 80, 1000, false);
-            //await _brick.BatchCommand.SendCommandAsync();
             MotorOutput.Text = "powerLeftWheel";
         }
 
 
         private async Task powerRightWheel()
         {
-            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
-            //await _brick.BatchCommand.SendCommandAsync();
+            //send direct command to motor B on robot to turn forward at power 80 for 1 second - turns robot left
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, 80, 1000, false);
             MotorOutput.Text = "powerRightWheel";
         }
 
-        //power to port A and C
+        //send batch command to robot to turn both motors B and C at a power of 50 for 1 second - powers the robot straight forward
         private async Task powerWheels()
         {
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
-            await _brick.BatchCommand.SendCommandAsync();
-            MotorOutput.Text = "powerBothWheel";
+            await _brick.BatchCommand.SendCommandAsync(); //send all batch commands
+            MotorOutput.Text = "powerWheels";
         }
 
         private async Task powerLeftWheelReverse()
         {
-            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
+            //send direct command to motor C on robot to turn in reverse at power -50 for 1 second - robot reverses to the right
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, -50, 1000, false);
-            //await _brick.BatchCommand.SendCommandAsync();
+            MotorOutput.Text = "powerLeftWheelReverse";
         }
 
 
         private async Task powerRightWheelReverse()
         {
-            //_brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
-            //await _brick.BatchCommand.SendCommandAsync();
+            //send direct command to motor B on robot to turn in reverse at power -50 for 1 second - robot reverse to the left
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, -50, 1000, false);
+            MotorOutput.Text = "powerRightWheelReverse";
         }
 
-        //power to port A and C
+        //send batch command to robot to turn both motors B and C at a power of -50 for 1 second - powers the robot backward in a straight direction
         private async Task powerWheelsReverse()
         {
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, -50, 1000, false);
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, -50, 1000, false);
             await _brick.BatchCommand.SendCommandAsync();
+            MotorOutput.Text = "powerWheelsReverse";
         }
 
-        
-        //close grabber
+
+        //send direct command to robot to turn motor A at a power of 100 - robot closes gripper
         private async Task grasp()
         {
             await _brick.DirectCommand.TurnMotorAtPowerAsync(OutputPort.A, 100);
         }
 
-        //open grabber
+        //send direct command to robot to turn motor A at a power of -100 - robot opens gripper
         private async Task unGrasp()
         {
             await _brick.DirectCommand.TurnMotorAtPowerAsync(OutputPort.A, -100);
         }
-        
-        //stop power to ports B and D
-        //private async Task StopMotorB()
-        //{
-        //    await _brick.DirectCommand.StopMotorAsync(OutputPort.A, false);
-        //    //await _brick.DirectCommand.StopMotorAsync(OutputPort.D, false);
-        //    MotorOutput.Text = "Stop A";
-        //}
 
-        //stop power to ports B and C
+        //stop direct commands to motors B and C and stops all power to motors
         private async Task StopMotorBC()
         {
             await _brick.DirectCommand.StopMotorAsync(OutputPort.B, false);
