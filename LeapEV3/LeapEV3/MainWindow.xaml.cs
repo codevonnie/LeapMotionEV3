@@ -36,7 +36,7 @@ namespace LeapEV3
                 Output.Text = "Brick Connected"; //output text to screen that connection has taken place
                 controller.EventContext = SynchronizationContext.Current; // used for dispatching events
                 controller.FrameReady += newFrameHandler; //when a tracking frame is ready
-                Output.Text += "        Leap Connected";
+                Output.Text += "   |     Leap Connected";
 
             }
             catch (Exception ex)
@@ -152,7 +152,7 @@ namespace LeapEV3
         {
             //send direct command to motor C on robot to turn forward at power 80 for 1 second - turns robot right
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, 80, 1000, false);
-            MotorOutput.Text = "powerLeftWheel";
+            //MotorOutput.Text = "powerLeftWheel";
         }
 
 
@@ -160,7 +160,7 @@ namespace LeapEV3
         {
             //send direct command to motor B on robot to turn forward at power 80 for 1 second - turns robot left
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, 80, 1000, false);
-            MotorOutput.Text = "powerRightWheel";
+            //MotorOutput.Text = "powerRightWheel";
         }
 
         //send batch command to robot to turn both motors B and C at a power of 50 for 1 second - powers the robot straight forward
@@ -169,14 +169,14 @@ namespace LeapEV3
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
             await _brick.BatchCommand.SendCommandAsync(); //send all batch commands
-            MotorOutput.Text = "powerWheels";
+            //MotorOutput.Text = "powerWheels";
         }
 
         private async Task powerLeftWheelReverse()
         {
             //send direct command to motor C on robot to turn in reverse at power -50 for 1 second - robot reverses to the right
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, -50, 1000, false);
-            MotorOutput.Text = "powerLeftWheelReverse";
+            //MotorOutput.Text = "powerLeftWheelReverse";
         }
 
 
@@ -184,7 +184,7 @@ namespace LeapEV3
         {
             //send direct command to motor B on robot to turn in reverse at power -50 for 1 second - robot reverse to the left
             await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, -50, 1000, false);
-            MotorOutput.Text = "powerRightWheelReverse";
+            //MotorOutput.Text = "powerRightWheelReverse";
         }
 
         //send batch command to robot to turn both motors B and C at a power of -50 for 1 second - powers the robot backward in a straight direction
@@ -193,7 +193,7 @@ namespace LeapEV3
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, -50, 1000, false);
             _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, -50, 1000, false);
             await _brick.BatchCommand.SendCommandAsync();
-            MotorOutput.Text = "powerWheelsReverse";
+            //MotorOutput.Text = "powerWheelsReverse";
         }
 
 
@@ -214,7 +214,7 @@ namespace LeapEV3
         {
             await _brick.DirectCommand.StopMotorAsync(OutputPort.B, false);
             await _brick.DirectCommand.StopMotorAsync(OutputPort.C, false);
-            MotorOutput.Text = "Stop B and C";
+            //MotorOutput.Text = "Stop B and C";
         }
         
         //stop all motors
@@ -227,6 +227,7 @@ namespace LeapEV3
         private void Disconnect_Click(object sender, RoutedEventArgs e)
         {
             _brick.Disconnect();
+            Output.Text = "Disconnected";
         }
     }
 }

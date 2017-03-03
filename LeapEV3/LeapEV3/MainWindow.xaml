@@ -5,15 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LeapEV3"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" WindowStartupLocation="CenterScreen" SizeToContent="Height">
+        Title="Lego EV3" Height="170.8" Width="225" WindowStartupLocation="CenterScreen" SizeToContent="Height">
     <StackPanel>
         <StackPanel Orientation="Horizontal">
-            <ComboBox x:Name="Ports"/>
-            <Button x:Name="Connect" Click="Connect_Click">Connect</Button>
-            <Button x:Name="Disconnect" Click="Disconnect_Click">Disconnect</Button>
-        </StackPanel>
-        <TextBox x:Name="Output"/>
-        <TextBox x:Name="MotorOutput" Height="29"/>
+        <Button x:Name="Connect" Click="Connect_Click" Width="110" Background="#FF33E321" FontSize="20">Connect</Button>
+        <Button x:Name="Disconnect" Click="Disconnect_Click" Content="Disconnect" Width="110" Background="#FFD41744" FontSize="20"/>
     </StackPanel>
-
+        <TextBox x:Name="Output"/>
+    </StackPanel>
 </Window>
