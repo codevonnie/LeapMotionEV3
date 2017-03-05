@@ -29,9 +29,7 @@ namespace LeapEV3
             try
             {
                 _brick = new Brick(new BluetoothCommunication("com6")); //connect to brick using bluetooth at the selected port
-                //_brick = new Brick(new UsbCommunication());
-                //_brick = new Brick(new NetworkCommunication("192.168.2.237"));
-                //_brick.BrickChanged += brick_BrickChanged;
+
                 await _brick.ConnectAsync(); //make connection to brick
                 Output.Text = "Brick Connected"; //output text to screen that connection has taken place
                 controller.EventContext = SynchronizationContext.Current; // used for dispatching events
@@ -45,7 +43,6 @@ namespace LeapEV3
             }
         }//Connect_Click
 
-        // ********************CHANGE BACK TO async void************************************
         async void newFrameHandler(object sender, FrameEventArgs eventArgs)
         {
             Leap.Frame frame = eventArgs.frame;//returns the most recent frame of tracking data
@@ -81,10 +78,7 @@ namespace LeapEV3
                 float strength = rightHand.GrabStrength; //get value of grab hand gesture for right hand
                 float roll = rightHand.PalmNormal.Roll; //get roll value of the right hand
                 float leftStrength = leftHand.GrabStrength; //get the value of grab hand gesture of left hand
-                //float pinch = rightHand.PinchStrength; //get value of pinch gesture of right hand
-                //List<Finger> fingerList = rightHand.Fingers;
-                //float fingers = fingerList.Count;
-                float pitch = rightHand.Direction.Pitch; //pitch is the bend in the elbow
+                 float pitch = rightHand.Direction.Pitch; //pitch is the bend in the elbow
                 Output.Text = ("Strength: " + strength.ToString() + " Right Roll: " + roll.ToString() + " Right Pitch: " + pitch);
 
                 //if right hand is a fist
@@ -151,7 +145,7 @@ namespace LeapEV3
         private async Task powerLeftWheel()
         {
             //send direct command to motor C on robot to turn forward at power 80 for 1 second - turns robot right
-            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, 80, 1000, false);
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, 100, 1000, false);
             //MotorOutput.Text = "powerLeftWheel";
         }
 
@@ -159,15 +153,15 @@ namespace LeapEV3
         private async Task powerRightWheel()
         {
             //send direct command to motor B on robot to turn forward at power 80 for 1 second - turns robot left
-            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, 80, 1000, false);
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, 100, 1000, false);
             //MotorOutput.Text = "powerRightWheel";
         }
 
         //send batch command to robot to turn both motors B and C at a power of 50 for 1 second - powers the robot straight forward
         private async Task powerWheels()
         {
-            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 50, 1000, false);
-            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 50, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, 80, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, 80, 1000, false);
             await _brick.BatchCommand.SendCommandAsync(); //send all batch commands
             //MotorOutput.Text = "powerWheels";
         }
@@ -175,7 +169,7 @@ namespace LeapEV3
         private async Task powerLeftWheelReverse()
         {
             //send direct command to motor C on robot to turn in reverse at power -50 for 1 second - robot reverses to the right
-            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, -50, 1000, false);
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.C, -100, 1000, false);
             //MotorOutput.Text = "powerLeftWheelReverse";
         }
 
@@ -183,15 +177,15 @@ namespace LeapEV3
         private async Task powerRightWheelReverse()
         {
             //send direct command to motor B on robot to turn in reverse at power -50 for 1 second - robot reverse to the left
-            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, -50, 1000, false);
+            await _brick.DirectCommand.TurnMotorAtPowerForTimeAsync(OutputPort.B, -100, 1000, false);
             //MotorOutput.Text = "powerRightWheelReverse";
         }
 
         //send batch command to robot to turn both motors B and C at a power of -50 for 1 second - powers the robot backward in a straight direction
         private async Task powerWheelsReverse()
         {
-            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, -50, 1000, false);
-            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, -50, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.B, -80, 1000, false);
+            _brick.BatchCommand.TurnMotorAtPowerForTime(OutputPort.C, -80, 1000, false);
             await _brick.BatchCommand.SendCommandAsync();
             //MotorOutput.Text = "powerWheelsReverse";
         }
